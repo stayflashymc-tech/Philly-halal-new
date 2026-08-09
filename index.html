@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Philly Halal Invoice">
+<meta name="theme-color" content="#111111">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Philly Halal Invoice</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#e9e9e9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#111}
+.toolbar{position:sticky;top:0;z-index:50;background:#fff;padding:10px;display:flex;gap:8px;flex-wrap:wrap;box-shadow:0 1px 8px #999}
+button,select{font-size:15px;padding:10px 13px;border:1px solid #777;border-radius:8px;background:#fff}
+button.primary{background:#111;color:#fff}
+.hint{width:100%;font-size:13px}
+.sheet{position:relative;width:min(100vw,816px);aspect-ratio:1086/1448;margin:14px auto;background:url("assets/invoice.png") center/100% 100% no-repeat;overflow:hidden}
+.field{position:absolute;border:0;background:rgba(255,255,255,.08);outline:none;padding:0 2px;color:#111;font-family:"Times New Roman",serif;font-size:clamp(7px,1.45vw,15px);line-height:1;text-align:center}
+.field:focus{background:rgba(255,238,160,.45);outline:1px solid #777}
+.store{left:66.2%;top:8.8%;width:27.2%;height:2.8%;font-size:clamp(9px,1.55vw,15px);text-align:left}
+.date{left:69.0%;top:12.0%;width:24.5%;height:2.7%}
+.row{height:2.97%;}
+.left{left:1.5%;width:47.2%}
+.right{left:49.1%;width:49.4%}
+.qty{left:0%;width:11.7%}
+.wt{left:60.8%;width:14.0%}
+.price{left:75.1%;width:12.2%}
+.total{left:87.3%;width:12.6%}
+.row.left .qty{}
+.row.left .wt{left:60.0%}
+.row.left .price{left:74.0%}
+.row.left .total{left:86.0%}
+.row.right .qty{left:0%;width:11.7%}
+.row.right .wt{left:60.0%;width:14.0%}
+.row.right .price{left:74.0%;width:12.5%}
+.row.right .total{left:86.0%;width:13%}
+.bottom-total{left:77.0%;top:88.2%;width:21.0%;height:2.8%;font-size:clamp(9px,1.6vw,16px);text-align:left}
+.old-balance{left:77.0%;top:91.1%;width:21.0%;height:2.8%;font-size:clamp(9px,1.6vw,16px);text-align:left}
+.amount-due{left:77.0%;top:94.0%;width:21.0%;height:2.8%;font-size:clamp(9px,1.6vw,16px);text-align:left}
+.paid{left:4.2%;top:90.0%;width:2.2%;height:2.1%}
+.notpaid{left:17.8%;top:90.0%;width:2.2%;height:2.1%}
+.signature{left:4.0%;top:94.5%;width:45%;height:2.5%;text-align:left}
+@media(max-width:600px){.toolbar{position:sticky} .sheet{margin:8px auto}}
+@media print{
+ @page{size:Letter portrait;margin:0}
+ html,body{width:8.5in;height:11in;background:#fff}
+ .toolbar{display:none!important}
+ .sheet{width:8.5in;height:11in;margin:0;page-break-after:avoid}
+ .field{background:transparent!important;outline:0!important}
+}
+</style>
+</head>
+<body>
+<div class="toolbar">
+<button class="primary" onclick="window.print()">🖨 PRINT PAPER</button>
+<button onclick="newInvoice()">NEW INVOICE</button>
+<button onclick="saveStore()">SAVE STORE</button>
+<select id="storeSelect" onchange="chooseStore()"><option value="">STORES</option></select>
+<div class="hint">Enter QTY, WT., and PRICE. Each line calculates automatically as QTY × WT. × PRICE.</div>
+</div>
+<div class="sheet" id="sheet">
+<input class="field store" id="soldTo" placeholder="">
+<input class="field date" id="date" readonly>
+<div class="row left" style="position:absolute;top:16.550%;height:2.97%">
+<input class="field qty" data-side="L" data-i="0" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="0" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="0" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="0" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:19.520%;height:2.97%">
+<input class="field qty" data-side="L" data-i="1" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="1" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="1" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="1" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:22.490%;height:2.97%">
+<input class="field qty" data-side="L" data-i="2" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="2" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="2" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="2" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:25.460%;height:2.97%">
+<input class="field qty" data-side="L" data-i="3" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="3" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="3" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="3" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:28.430%;height:2.97%">
+<input class="field qty" data-side="L" data-i="4" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="4" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="4" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="4" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:31.400%;height:2.97%">
+<input class="field qty" data-side="L" data-i="5" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="5" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="5" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="5" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:34.370%;height:2.97%">
+<input class="field qty" data-side="L" data-i="6" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="6" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="6" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="6" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:37.340%;height:2.97%">
+<input class="field qty" data-side="L" data-i="7" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="7" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="7" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="7" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:40.310%;height:2.97%">
+<input class="field qty" data-side="L" data-i="8" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="8" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="8" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="8" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:43.280%;height:2.97%">
+<input class="field qty" data-side="L" data-i="9" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="9" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="9" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="9" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:46.250%;height:2.97%">
+<input class="field qty" data-side="L" data-i="10" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="10" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="10" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="10" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:49.220%;height:2.97%">
+<input class="field qty" data-side="L" data-i="11" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="11" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="11" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="11" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:52.190%;height:2.97%">
+<input class="field qty" data-side="L" data-i="12" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="12" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="12" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="12" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:55.160%;height:2.97%">
+<input class="field qty" data-side="L" data-i="13" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="13" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="13" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="13" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:58.130%;height:2.97%">
+<input class="field qty" data-side="L" data-i="14" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="14" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="14" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="14" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:61.100%;height:2.97%">
+<input class="field qty" data-side="L" data-i="15" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="15" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="15" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="15" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:64.070%;height:2.97%">
+<input class="field qty" data-side="L" data-i="16" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="16" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="16" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="16" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:67.040%;height:2.97%">
+<input class="field qty" data-side="L" data-i="17" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="17" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="17" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="17" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:70.010%;height:2.97%">
+<input class="field qty" data-side="L" data-i="18" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="18" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="18" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="18" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:72.980%;height:2.97%">
+<input class="field qty" data-side="L" data-i="19" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="19" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="19" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="19" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:75.950%;height:2.97%">
+<input class="field qty" data-side="L" data-i="20" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="20" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="20" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="20" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:78.920%;height:2.97%">
+<input class="field qty" data-side="L" data-i="21" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="21" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="21" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="21" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:81.890%;height:2.97%">
+<input class="field qty" data-side="L" data-i="22" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="22" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="22" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="22" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:84.860%;height:2.97%">
+<input class="field qty" data-side="L" data-i="23" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="23" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="23" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="23" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:87.830%;height:2.97%">
+<input class="field qty" data-side="L" data-i="24" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="24" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="24" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="24" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:90.800%;height:2.97%">
+<input class="field qty" data-side="L" data-i="25" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="25" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="25" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="25" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:93.770%;height:2.97%">
+<input class="field qty" data-side="L" data-i="26" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="26" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="26" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="26" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:96.740%;height:2.97%">
+<input class="field qty" data-side="L" data-i="27" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="27" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="27" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="27" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:99.710%;height:2.97%">
+<input class="field qty" data-side="L" data-i="28" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="28" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="28" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="28" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:102.680%;height:2.97%">
+<input class="field qty" data-side="L" data-i="29" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="29" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="29" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="29" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:105.650%;height:2.97%">
+<input class="field qty" data-side="L" data-i="30" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="30" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="30" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="30" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:108.620%;height:2.97%">
+<input class="field qty" data-side="L" data-i="31" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="31" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="31" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="31" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:111.590%;height:2.97%">
+<input class="field qty" data-side="L" data-i="32" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="32" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="32" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="32" data-type="total" readonly>
+</div><div class="row left" style="position:absolute;top:114.560%;height:2.97%">
+<input class="field qty" data-side="L" data-i="33" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="L" data-i="33" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="L" data-i="33" data-type="price" inputmode="decimal">
+<input class="field total" data-side="L" data-i="33" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:16.550%;height:2.97%">
+<input class="field qty" data-side="R" data-i="0" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="0" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="0" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="0" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:19.520%;height:2.97%">
+<input class="field qty" data-side="R" data-i="1" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="1" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="1" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="1" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:22.490%;height:2.97%">
+<input class="field qty" data-side="R" data-i="2" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="2" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="2" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="2" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:25.460%;height:2.97%">
+<input class="field qty" data-side="R" data-i="3" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="3" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="3" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="3" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:28.430%;height:2.97%">
+<input class="field qty" data-side="R" data-i="4" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="4" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="4" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="4" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:31.400%;height:2.97%">
+<input class="field qty" data-side="R" data-i="5" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="5" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="5" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="5" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:34.370%;height:2.97%">
+<input class="field qty" data-side="R" data-i="6" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="6" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="6" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="6" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:37.340%;height:2.97%">
+<input class="field qty" data-side="R" data-i="7" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="7" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="7" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="7" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:40.310%;height:2.97%">
+<input class="field qty" data-side="R" data-i="8" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="8" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="8" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="8" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:43.280%;height:2.97%">
+<input class="field qty" data-side="R" data-i="9" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="9" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="9" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="9" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:46.250%;height:2.97%">
+<input class="field qty" data-side="R" data-i="10" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="10" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="10" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="10" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:49.220%;height:2.97%">
+<input class="field qty" data-side="R" data-i="11" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="11" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="11" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="11" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:52.190%;height:2.97%">
+<input class="field qty" data-side="R" data-i="12" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="12" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="12" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="12" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:55.160%;height:2.97%">
+<input class="field qty" data-side="R" data-i="13" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="13" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="13" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="13" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:58.130%;height:2.97%">
+<input class="field qty" data-side="R" data-i="14" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="14" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="14" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="14" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:61.100%;height:2.97%">
+<input class="field qty" data-side="R" data-i="15" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="15" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="15" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="15" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:64.070%;height:2.97%">
+<input class="field qty" data-side="R" data-i="16" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="16" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="16" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="16" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:67.040%;height:2.97%">
+<input class="field qty" data-side="R" data-i="17" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="17" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="17" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="17" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:70.010%;height:2.97%">
+<input class="field qty" data-side="R" data-i="18" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="18" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="18" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="18" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:72.980%;height:2.97%">
+<input class="field qty" data-side="R" data-i="19" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="19" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="19" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="19" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:75.950%;height:2.97%">
+<input class="field qty" data-side="R" data-i="20" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="20" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="20" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="20" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:78.920%;height:2.97%">
+<input class="field qty" data-side="R" data-i="21" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="21" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="21" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="21" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:81.890%;height:2.97%">
+<input class="field qty" data-side="R" data-i="22" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="22" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="22" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="22" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:84.860%;height:2.97%">
+<input class="field qty" data-side="R" data-i="23" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="23" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="23" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="23" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:87.830%;height:2.97%">
+<input class="field qty" data-side="R" data-i="24" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="24" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="24" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="24" data-type="total" readonly>
+</div><div class="row right" style="position:absolute;top:90.800%;height:2.97%">
+<input class="field qty" data-side="R" data-i="25" data-type="qty" inputmode="decimal">
+<input class="field wt" data-side="R" data-i="25" data-type="wt" inputmode="decimal">
+<input class="field price" data-side="R" data-i="25" data-type="price" inputmode="decimal">
+<input class="field total" data-side="R" data-i="25" data-type="total" readonly>
+</div>
+<input type="checkbox" class="field paid" id="paid">
+<input type="checkbox" class="field notpaid" id="notpaid">
+<input class="field signature" id="signature">
+<input class="field bottom-total" id="grandTotal" readonly>
+<input class="field old-balance" id="oldBalance" inputmode="decimal">
+<input class="field amount-due" id="amountDue" readonly>
+</div>
+<script>
+const key='phillyHalalStoresV1';
+const allFields=[...document.querySelectorAll('.field')];
+function money(n){return Number.isFinite(n)?n.toFixed(2):''}
+function recalc(){
+ let sum=0;
+ document.querySelectorAll('[data-type="qty"]').forEach(q=>{
+   const side=q.dataset.side, i=q.dataset.i;
+   const wt=document.querySelector(`[data-side="${side}"][data-i="${i}"][data-type="wt"]`);
+   const price=document.querySelector(`[data-side="${side}"][data-i="${i}"][data-type="price"]`);
+   const total=document.querySelector(`[data-side="${side}"][data-i="${i}"][data-type="total"]`);
+   const a=parseFloat(q.value), b=parseFloat(wt.value), c=parseFloat(price.value);
+   if(Number.isFinite(a)&&Number.isFinite(b)&&Number.isFinite(c)){
+     const t=a*b*c; total.value=money(t); sum+=t;
+   } else total.value='';
+ });
+ grandTotal.value=money(sum);
+ const old=parseFloat(oldBalance.value)||0;
+ amountDue.value=money(sum+old);
+}
+allFields.forEach(f=>f.addEventListener('input',recalc));
+function setDate(){
+ const d=new Date();
+ date.value=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+function newInvoice(){
+ allFields.forEach(f=>{
+   if(f.id==='date') return;
+   if(f.type==='checkbox') f.checked=false;
+   else f.value='';
+ });
+ setDate(); recalc();
+}
+function getStores(){try{return JSON.parse(localStorage.getItem(key)||'[]')}catch(e){return[]}}
+function refreshStores(){
+ const s=document.getElementById('storeSelect');
+ s.innerHTML='<option value="">STORES</option>';
+ getStores().forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o)});
+}
+function saveStore(){
+ const v=soldTo.value.trim(); if(!v){alert('Enter the store name first.');return}
+ const a=getStores(); if(!a.includes(v)){a.push(v);localStorage.setItem(key,JSON.stringify(a))}
+ refreshStores(); storeSelect.value=v;
+}
+function chooseStore(){if(storeSelect.value) soldTo.value=storeSelect.value}
+paid.addEventListener('change',()=>{if(paid.checked)notpaid.checked=false});
+notpaid.addEventListener('change',()=>{if(notpaid.checked)paid.checked=false});
+setDate(); refreshStores(); recalc();
+</script>
+</body></html>

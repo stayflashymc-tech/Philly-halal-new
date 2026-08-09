@@ -1,0 +1,9 @@
+{
+  "name": "Philly Halal Company Invoice",
+  "short_name": "Philly Invoice",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#111111",
+  "icons": []
+}
