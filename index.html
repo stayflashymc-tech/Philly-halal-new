@@ -418,5 +418,28 @@ function chooseStore(){if(storeSelect.value) soldTo.value=storeSelect.value}
 paid.addEventListener('change',()=>{if(paid.checked)notpaid.checked=false});
 notpaid.addEventListener('change',()=>{if(notpaid.checked)paid.checked=false});
 setDate(); refreshStores(); recalc();
+{}
+
+function fixInvoiceRows() {
+  const rowHeight = 2.97;
+  const firstRowTop = 16.55;
+
+  document.querySelectorAll('.row.left').forEach((row, i) => {
+    row.style.setProperty(
+      'top',
+      `${firstRowTop + (i * rowHeight)}%`,
+      'important'
+    );
+  });
+
+  document.querySelectorAll('.row.right').forEach((row, i) => {
+    row.style.setProperty(
+      'top',
+      `${firstRowTop + (i * rowHeight)}%`,
+      'important'
+    );
+  });
+}
+
+document.addEventListener('DOMContentLoaded', fixInvoiceRows);
 </script>
-</body></html>
